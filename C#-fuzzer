@@ -1,0 +1,51 @@
+using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading.Tasks;
+
+namespace PortFuzzer
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // Set the IP address and port number to test
+            string ipAddress = "127.0.0.1";
+            int portNumber = 80;
+
+            // Set the number of test iterations and the delay between each iteration
+            int iterations = 1000;
+            int delay = 100;
+
+            Console.WriteLine("Starting port fuzzer...\n");
+
+            // Use Parallel.For to run the connection attempts in parallel
+            Parallel.For(0, iterations, i =>
+            {
+                try
+                {
+                    // Attempt to connect to the specified IP address and port
+                    TcpClient client = new TcpClient(ipAddress, portNumber);
+
+                    // If the connection is successful, print a message
+                    IPGlobalProperties ipProperties = IPGlobalProperties.GetIPGlobalProperties();
+                    string serviceName = ipProperties.GetServiceName(portNumber);
+                    Console.WriteLine("Successfully connected to {0} on port {1} ({2})", ipAddress, portNumber, serviceName);
+
+                    // Close the connection
+                    client.Close();
+                }
+                catch (Exception ex)
+                {
+                    // If the connection fails, print the exception message
+                    Console.WriteLine("Service crashed on port {0}: {1}", portNumber, ex.Message);
+                }
+
+                // Delay for the specified amount of time before the next iteration
+                System.Threading.Thread.Sleep(delay);
+            });
+
+            Console.WriteLine("\nPort fuzzer finished.");
+        }
+    }
+}

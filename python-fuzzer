@@ -1,0 +1,65 @@
+Here is a modified version of the network fuzzer that includes options for the IP address and port number:
+
+Copy code
+
+
+import argparse
+import socket
+import random
+import time
+
+# Service discovery function
+def discover_service(ip, port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.connect((ip, port))
+    print(f"Connected to {ip}:{str(port)}")
+    return s
+
+# Fuzzer function
+def fuzz(s):
+    while True:
+        # Send random data to the network service
+        data = bytearray(random.getrandbits(8) for _ in range(1024))
+        s.send(data)
+
+        # Wait for a response
+        response = s.recv(1024)
+        if not response:
+            print(f"Connection closed by {ip}:{str(port)}")
+            break
+
+        # Check for crashes
+        if b"CRASH" in response:
+            print(f"Service at {ip}:{str(port)} crashed!")
+            break
+
+# Main function
+if __name__ == "__main__":
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--ip", default="localhost", help="IP address of the network service")
+    parser.add_argument("-p", "--port", type=int, default=12345, help="Port number of the network service")
+    args = parser.parse_args()
+
+    # Discover the network service
+    s = discover_service(args.ip, args.port)
+
+    # Fuzz the service
+    fuzz(s)
+
+
+
+This version of the fuzzer uses the argparse module to parse command-line arguments for the IP address and port number of the network service. It then uses the discover_service() function to connect to the network service, and the fuzz() function to send random data and check for crashes.
+
+To use this fuzzer, you will need to have Python and the argparse module installed on your system. You can install the argparse module using the following command:
+
+Copy code
+pip install argparse
+Once you have Python and the argparse module installed, you can run the fuzzer by opening a command prompt or terminal, navigating to the directory where you saved the code, and running the following command:
+
+Copy code
+python network_fuzzer.py -i <ip_address> -p <port>
+This will start the fuzzer and connect to the network service at the specified IP address and port number. The fuzz() function will then start sending random data to the service and checking for crashes.
+
+You can modify the code to suit your specific needs, such as changing the size of the random data, the string that indicates a crash, or the default values for the IP address and port number. I hope this helps! Let me know if you have any other questions.

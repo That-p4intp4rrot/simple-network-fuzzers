@@ -1,0 +1,51 @@
+use std::fs::File;
+use std::io::Write;
+use std::net::{TcpStream, ToSocketAddrs};
+use std::thread;
+use std::time::Duration;
+use rand::{thread_rng, Rng};
+
+fn main() {
+    // Set the IP address and port range to test
+    let ip_address = "127.0.0.1";
+    let port_range = 1..65535;
+
+    // Set the number of test iterations and the delay range
+    let iterations = 1000;
+    let delay_range = 100..200;
+
+    // Open a log file for writing
+    let log_file = File::create("port_fuzzer.log").unwrap();
+    let mut log = log::Logger::new(log_file);
+
+    println!("Starting port fuzzer...\n");
+
+    // Create a thread pool to run the connection attempts in parallel
+    let thread_pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(num_cpus::get())
+        .build()
+        .unwrap();
+
+    thread_pool.install(|| {
+        // Loop through the specified number of iterations
+        for i in 0..iterations {
+            // Generate a random port number within the specified range
+            let mut rng = thread_rng();
+            let port_number: u16 = rng.gen_range(port_range.start, port_range.end);
+
+            // Attempt to connect to the specified IP address and port
+            let address = format!("{}:{}", ip_address, port_number);
+            let mut stream = match TcpStream::connect(address.to_socket_addrs().unwrap()) {
+                Ok(stream) => stream,
+                Err(e) => {
+                    // If the connection fails, log the error message and continue to the next iteration
+                    log.error(&format!("Error connecting to {}: {}", address, e));
+                    continue;
+                }
+            };
+
+            // If the connection is successful, generate some random data and write it to the stream
+            let data_size = rng.gen_range(1, 65535);
+            let mut data = vec![0; data_size];
+            rng.fill(&mut data[..]);
+            stream.
